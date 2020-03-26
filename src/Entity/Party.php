@@ -38,9 +38,15 @@ class Party
      */
     private $players;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\UsedScene", mappedBy="party", orphanRemoval=true)
+     */
+    private $usedScenes;
+
     public function __construct()
     {
         $this->players = new ArrayCollection();
+        $this->usedScenes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -109,6 +115,37 @@ class Party
             // set the owning side to null (unless already changed)
             if ($player->getParty() === $this) {
                 $player->setParty(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|UsedScene[]
+     */
+    public function getUsedScenes(): Collection
+    {
+        return $this->usedScenes;
+    }
+
+    public function addUsedScene(UsedScene $usedScene): self
+    {
+        if (!$this->usedScenes->contains($usedScene)) {
+            $this->usedScenes[] = $usedScene;
+            $usedScene->setParty($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUsedScene(UsedScene $usedScene): self
+    {
+        if ($this->usedScenes->contains($usedScene)) {
+            $this->usedScenes->removeElement($usedScene);
+            // set the owning side to null (unless already changed)
+            if ($usedScene->getParty() === $this) {
+                $usedScene->setParty(null);
             }
         }
 
