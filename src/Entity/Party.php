@@ -2,9 +2,11 @@
 
 namespace App\Entity;
 
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\VarDumper\Cloner\Data;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PartyRepository")
@@ -47,6 +49,10 @@ class Party
     {
         $this->players = new ArrayCollection();
         $this->usedScenes = new ArrayCollection();
+
+        $this->accessCode = substr(md5(uniqid()), 0, 5);
+        $this->currentStep = 0;
+        $this->creationDate = new DateTime();
     }
 
     public function getId(): ?int
