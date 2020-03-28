@@ -2,12 +2,36 @@
 // src/Controller/PartyController.php
 namespace App\Controller;
 
+use Symfony\Component\HttpFoundation\Request;
+
 use App\Entity\Party;
+use App\Entity\Player;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 
 class PartyController extends AbstractController
 {
+    private $params;
+
+    private function getParty() {
+        $request = Request::createFromGlobals();
+        $content = $request->getContent();
+        
+        if (!empty($content)) {
+            $this->params = json_decode($content, true);
+            $party = $this->getDoctrine()
+            ->getRepository(Party::class)
+            ->findOneBy([
+                'accessCode' => $this->params['code'],
+                'currentStep' => 0
+            ]);
+            if ($party) {
+                return $party;
+            }
+        }
+        throw $this->createNotFoundException('The party does not exist');
+    }
+
     /**
      * @Route("/party/new")
     */
@@ -16,8 +40,17 @@ class PartyController extends AbstractController
         $entityManager = $this->getDoctrine()->getManager();
         $party = new Party();
         $entityManager->persist($party);
-        //$entityManager->flush();
+        $entityManager->flush();
         return $this->json(['code' => $party->getAccessCode()]);
+    }
+
+    /**
+     * @Route("/party/test")
+    */
+    public function test()
+    {
+        return $this->json(['code' => $this->getParty()->getAccessCode()]);
+
     }
 
     /**
@@ -25,13 +58,15 @@ class PartyController extends AbstractController
     */
     public function join()
     {
-        $party = $this->getDoctrine()
-        ->getRepository(Party::class)
-        ->findOneBy(['accessCode' => '36395']);
+        $party = $this->getParty();
 
-        $content = $this->get("request")->getContent();
-        if (!empty($content)) {
-            $params = json_decode($content, true); // 2nd param to get as array
-        }
+        $entityManager = $this->getDoctrine()->getManager();
+        $player = new Player();
+        $player->setParty($party);
+        $player->setName($this->params['name']);
+        $entityManager->persist($player);
+        $entityManager->flush();
+
+        return $this->json(['playerId' => $player->getId()]);
     }
 }
