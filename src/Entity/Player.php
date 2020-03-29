@@ -5,9 +5,14 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PlayerRepository")
+ * @UniqueEntity(
+ *   fields={"name", "party"}
+ * )
  */
 class Player
 {
@@ -20,12 +25,14 @@ class Player
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(groups={"player"})
      */
     private $name;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Party", inversedBy="players")
      * @ORM\JoinColumn(nullable=false)
+     * @Assert\NotBlank(groups={"player"})
      */
     private $party;
 
