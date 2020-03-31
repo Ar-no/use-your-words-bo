@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 use App\Entity\Party;
 use App\Entity\Player;
@@ -33,6 +34,14 @@ class PartyController extends AbstractController
     }
 
     /**
+     * @Route("/")
+    */
+    public function index()
+    {
+        throw $this->createAccessDeniedException('You cannot call this api.');
+    }
+
+    /**
      * @Route("/party/new")
     */
     public function new()
@@ -60,13 +69,43 @@ class PartyController extends AbstractController
     {
         $party = $this->getParty();
 
+        $playerTest = $this->getDoctrine()
+        ->getRepository(Player::class)
+        ->findOneBy([
+            'party' => $party,
+            'name' => $this->params['name']
+        ]);
+        if ($playerTest) {
+            throw $this->createAccessDeniedException('This name is already used');
+        }
+
         $entityManager = $this->getDoctrine()->getManager();
         $player = new Player();
-        $player->setParty($party);
         $player->setName($this->params['name']);
+        $player->setParty($party);
         $entityManager->persist($player);
         $entityManager->flush();
 
         return $this->json(['playerId' => $player->getId()]);
+    }
+
+    /**
+     * @Route("/party/players")
+    */
+    public function getPlayers()
+    {
+        $party = $this->getParty();
+        $players = $this->getDoctrine()
+        ->getRepository(Player::class)
+        ->findBy([
+            'party' => $party
+        ]);
+        if(!$players){
+            return JsonResponse::create([], JsonResponse::HTTP_NO_CONTENT);
+        }
+
+        return $this->json(array_map(function(Player $p){
+            return ['playerId' => $p->getId(), 'name' => $p->getName()];
+        }, $players));
     }
 }
