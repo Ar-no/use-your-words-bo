@@ -7,6 +7,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 use App\Entity\Party;
 use App\Entity\Player;
+use App\Entity\Scene;
+use App\Entity\UsedScene;
+
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -49,6 +52,20 @@ class PartyController extends AbstractController
         $entityManager = $this->getDoctrine()->getManager();
         $party = new Party();
         $entityManager->persist($party);
+
+        // sélection de 5 scènes aléatoires
+        $scenes = $this->getDoctrine()
+        ->getRepository(Scene::class)
+        ->findAll();
+        shuffle($scenes);
+        for($i=0; $i<5; $i++) {
+            $us = new UsedScene();
+            $us->setParty($party);
+            $us->setScene($scenes[$i]);
+            $us->setStep($i);
+            $entityManager->persist($us);
+        }
+
         $entityManager->flush();
         return $this->json(['code' => $party->getAccessCode()]);
     }
@@ -101,7 +118,7 @@ class PartyController extends AbstractController
             'party' => $party
         ]);
         if(!$players){
-            return JsonResponse::create([], JsonResponse::HTTP_NO_CONTENT);
+            return JsonResponse::create(null, JsonResponse::HTTP_NO_CONTENT);
         }
 
         return $this->json(array_map(function(Player $p){
