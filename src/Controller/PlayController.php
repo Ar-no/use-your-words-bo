@@ -5,6 +5,7 @@ namespace App\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+use App\Entity\Answer;
 use App\Entity\Party;
 use App\Entity\Player;
 use App\Entity\Scene;
@@ -15,31 +16,94 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class PlayController extends AbstractController
 {
+    private $params;
 
-    private function getParty() {
+    private function getPlayer() {
         $request = Request::createFromGlobals();
         $content = $request->getContent();
         
         if (!empty($content)) {
             $this->params = json_decode($content, true);
-            $party = $this->getDoctrine()
-            ->getRepository(Party::class)
+            $player = $this->getDoctrine()
+            ->getRepository(Player::class)
             ->findOneBy([
-                'accessCode' => $this->params['code']
+                'id' => $this->params['player']
             ]);
-            if ($party) {
-                return $party;
+            if ($player) {
+                return $player;
             }
         }
-        throw $this->createNotFoundException('The party does not exist');
+        throw $this->createNotFoundException('The player does not exist');
     }
 
     /**
-     * @Route("/play")
+     * @Route("/scene/play")
     */
-    public function index()
+    public function play()
     {
-        $party = $this->getParty();
-        return $this->json($party->getId());
+        $party = $this->getPlayer()->getParty();
+        if(count($party->getPlayers()) < 3){
+            throw $this->createAccessDeniedException('Not enough players');
+        }
+
+        $currentScene = $party->getUsedScenes()[$party->getCurrentStep()];
+
+        return $this->json([
+            'scene' => $currentScene->getId(),
+            'url' => $currentScene->getScene()->getUrl()
+        ]);
+    }
+
+    /**
+     * @Route("/scene/answer")
+    */
+    public function answer()
+    {
+        $player = $this->getPlayer();
+        $party = $player->getParty();
+        $strAnswer = $this->params['answer'];
+
+        $currentScene = $party->getUsedScenes()[$party->getCurrentStep()];
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $answer = new Answer();
+        $answer->setAnswer($strAnswer);
+        $answer->setPlayer($player);
+        $answer->setUsedScene($currentScene);
+        $entityManager->persist($answer);
+        $entityManager->flush();
+        
+        return $this->json([
+            'answer' => $answer->getId()
+        ]);
+    }
+
+    /**
+     * @Route("/scene/answers")
+    */
+    public function answers()
+    {
+        $player = $this->getPlayer();
+        $party = $player->getParty();
+        $currentScene = $party->getUsedScenes()[$party->getCurrentStep()];
+
+
+        return $this->json(array_map(function(Answer $a){
+            return ['answer' => $a->getId(), 'text' => $a->getAnswer()];
+        }, $currentScene->getAnswers()->toArray()));
+    }
+
+    /**
+     * @Route("/scene/players")
+    */
+    public function players()
+    {
+        $player = $this->getPlayer();
+        $party = $player->getParty();
+        $currentScene = $party->getUsedScenes()[$party->getCurrentStep()];
+
+        return $this->json(array_map(function(Answer $a){
+            return ['player' => $a->getPlayer()->getName()];
+        }, $currentScene->getAnswers()->toArray()));
     }
 }

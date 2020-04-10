@@ -103,7 +103,7 @@ class PartyController extends AbstractController
         $entityManager->persist($player);
         $entityManager->flush();
 
-        return $this->json(['playerId' => $player->getId()]);
+        return $this->json(['player' => $player->getId()]);
     }
 
     /**
@@ -122,7 +122,7 @@ class PartyController extends AbstractController
         }
 
         return $this->json(array_map(function(Player $p){
-            return ['playerId' => $p->getId(), 'name' => $p->getName()];
+            return ['name' => $p->getName()];
         }, $players));
     }
 }
