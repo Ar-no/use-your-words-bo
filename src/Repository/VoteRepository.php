@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Party;
 use App\Entity\Vote;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
@@ -19,32 +20,13 @@ class VoteRepository extends ServiceEntityRepository
         parent::__construct($registry, Vote::class);
     }
 
-    // /**
-    //  * @return Vote[] Returns an array of Vote objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function findAllVotesByParty(Party $party)
     {
-        return $this->createQueryBuilder('v')
-            ->andWhere('v.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('v.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $entityManager = $this->getEntityManager();
+        $query = $entityManager->createQuery('SELECT v FROM App\Entity\Vote v JOIN v.answer a JOIN a.player pl WHERE pl.party = :party');
+        $query->setParameter('party', $party);
+        $votes = $query->getResult();
 
-    /*
-    public function findOneBySomeField($value): ?Vote
-    {
-        return $this->createQueryBuilder('v')
-            ->andWhere('v.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        return $votes;
     }
-    */
 }

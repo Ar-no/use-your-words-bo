@@ -50,6 +50,14 @@ class Vote
         return $this->answer;
     }
 
+    public function getScorer(): ?Player
+    {
+        if($this->answer){
+            return $this->answer->player;
+        }
+        return null;
+    }
+
     public function setAnswer(?Answer $answer): self
     {
         $this->answer = $answer;

@@ -142,4 +142,15 @@ class Player
 
         return $this;
     }
+
+    public function getScore(): int
+    {
+        $score = 0;
+        foreach($this->getAnswers() as $a){
+            foreach($a->getVotes() as $v){
+                $score += 100;
+            }
+        }
+        return $score;
+    }
 }

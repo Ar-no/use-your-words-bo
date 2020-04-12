@@ -84,6 +84,12 @@ class Party
         return $this;
     }
 
+    public function goNextStep(): self
+    {
+        $this->currentStep++;
+        return $this;
+    }
+
     public function getCreationDate(): ?\DateTimeInterface
     {
         return $this->creationDate;

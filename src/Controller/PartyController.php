@@ -9,7 +9,7 @@ use App\Entity\Party;
 use App\Entity\Player;
 use App\Entity\Scene;
 use App\Entity\UsedScene;
-
+use App\Entity\Vote;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -26,8 +26,7 @@ class PartyController extends AbstractController
             $party = $this->getDoctrine()
             ->getRepository(Party::class)
             ->findOneBy([
-                'accessCode' => $this->params['code'],
-                'currentStep' => 0
+                'accessCode' => $this->params['party']
             ]);
             if ($party) {
                 return $party;
@@ -112,17 +111,29 @@ class PartyController extends AbstractController
     public function getPlayers()
     {
         $party = $this->getParty();
-        $players = $this->getDoctrine()
-        ->getRepository(Player::class)
-        ->findBy([
-            'party' => $party
-        ]);
+        $players = $party->getPlayers();
         if(!$players){
             return JsonResponse::create(null, JsonResponse::HTTP_NO_CONTENT);
         }
 
         return $this->json(array_map(function(Player $p){
             return ['name' => $p->getName()];
-        }, $players));
+        }, $players->toArray()));
+    }
+
+    /**
+     * @Route("/party/score")
+    */
+    public function score()
+    {
+        $party = $this->getParty();
+        $players = $party->getPlayers();
+
+        return $this->json(array_map(function(Player $p){
+            return [
+                'name' => $p->getName(),
+                'score' => $p->getScore()
+            ];
+        }, $players->toArray()));
     }
 }

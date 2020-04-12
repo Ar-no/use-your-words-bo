@@ -55,6 +55,26 @@ class PlayController extends AbstractController
     }
 
     /**
+     * @Route("/scene/next")
+    */
+    public function next()
+    {
+        $party = $this->getPlayer()->getParty();
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $party->goNextStep();
+        $entityManager->persist($party);
+        $entityManager->flush();
+
+        $currentScene = $party->getUsedScenes()[$party->getCurrentStep()];
+
+        return $this->json([
+            'scene' => $currentScene->getId(),
+            'url' => $currentScene->getScene()->getUrl()
+        ]);
+    }
+
+    /**
      * @Route("/scene/answer")
     */
     public function answer()
