@@ -66,7 +66,7 @@ class PartyController extends AbstractController
         }
 
         $entityManager->flush();
-        return $this->json(['code' => $party->getAccessCode()]);
+        return $this->json(['party' => $party->getAccessCode()]);
     }
 
     /**
@@ -74,7 +74,7 @@ class PartyController extends AbstractController
     */
     public function test()
     {
-        return $this->json(['code' => $this->getParty()->getAccessCode()]);
+        return $this->json(['party' => $this->getParty()->getAccessCode()]);
 
     }
 
